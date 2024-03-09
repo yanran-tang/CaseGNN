@@ -136,4 +136,12 @@ If you find this repo useful, please cite
   volume    = {abs/2312.11229},
   year      = {2023},
 }
+
+@article{PromptCase,
+  author    = {Yanran Tang and Ruihong Qiu and Xue Li},
+  title     = {Prompt-based Effective Input Reformulation for Legal Case Retrieval},
+  journal   = {CoRR},
+  volume    = {abs/2309.02962},
+  year      = {2023},
+}
 ```
