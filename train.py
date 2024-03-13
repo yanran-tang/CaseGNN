@@ -145,84 +145,82 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
     else:
         ## Test
         model.eval()
+        with torch.no_grad():
+            label_list = []
+            for batched_graph, labels in tqdm(dataloader):
+                sumfact_graph_batch = batched_graph
+                labels = [str(int(x)).zfill(6) for x in labels]
+                label_list.append(labels)
+            test_label_list = [y for x in label_list for y in x]
 
-        label_list = []
-        for batched_graph, labels in tqdm(dataloader):
-            sumfact_graph_batch = batched_graph
-            labels = [str(int(x)).zfill(6) for x in labels]
-            label_list.append(labels)
-        test_label_list = [y for x in label_list for y in x]
-
-        ## test refer(issue) graph
-        test_referissue_graph_list = []
-        for i in test_label_list:
-            test_referissue_graph = referissue_pool_dataset.graphs[i]
-            test_referissue_graph_list.append(test_referissue_graph)
-        referissue_graph_batch = dgl.batch(test_referissue_graph_list)
-
-
-        test_sumfact_graph_rep = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
-        test_referissue_graph_rep = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device)) 
-
-        test_sumfact_graph_rep_norm = test_sumfact_graph_rep / test_sumfact_graph_rep.norm(dim=1)[:, None]
-        test_referissue_graph_rep_norm = test_referissue_graph_rep / test_referissue_graph_rep.norm(dim=1)[:, None]
-
-        test_sumfact_score = torch.mm(test_sumfact_graph_rep_norm, test_sumfact_graph_rep_norm.T)
-        test_referissue_score = torch.mm(test_referissue_graph_rep_norm, test_referissue_graph_rep_norm.T)
-
-        test_sim_score = test_sumfact_score+test_referissue_score
-        test_sim_score.fill_diagonal_(float('-inf'))
-
-        sim_score = []
-
-        test_query_list = []
-        for key, value in label_dict.items():
-            test_query_list.append(key)
-            query_index = test_label_list.index(key.split('.')[0])
-            score = test_sim_score[query_index, :]
-            sim_score.append(score)
-        sim_score = torch.stack(sim_score)                        
-        
-        final_pre_dict = rank(sim_score, 1335, test_query_list, test_label_list)
-
-        ##1stage
-        correct_pred, retri_cases, relevant_cases, Micro_pre, Micro_recall, Micro_F, macro_pre, macro_recall, macro_F = metric(5, final_pre_dict, label_dict)
-        yf_dict, correct_pred_yf, retri_cases_yf, relevant_cases_yf, Micro_pre_yf, Micro_recall_yf, Micro_F_yf, macro_pre_yf, macro_recall_yf, macro_F_yf = yf_metric(5, './label/test_2023_candidate_with_yearfilter.json', final_pre_dict, label_dict)
-
-        ndcg_score, mrr_score, map_score, p_score = t_metrics(label_dict, final_pre_dict, 5)
-        ndcg_score_yf, mrr_score_yf, map_score_yf, p_score_yf = t_metrics(label_dict, yf_dict, 5)
+            ## test refer(issue) graph
+            test_referissue_graph_list = []
+            for i in test_label_list:
+                test_referissue_graph = referissue_pool_dataset.graphs[i]
+                test_referissue_graph_list.append(test_referissue_graph)
+            referissue_graph_batch = dgl.batch(test_referissue_graph_list)
 
 
-        print("Correct Predictions: ", correct_pred)
-        print("Retrived Cases: ", retri_cases)
-        print("Relevant Cases: ", relevant_cases)
+            test_sumfact_graph_rep = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
+            test_referissue_graph_rep = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device)) 
 
-        print("Micro Precision: ", Micro_pre)
-        print("Micro Recall: ", Micro_recall)
-        print("Micro F1: ", Micro_F)
+            test_sumfact_graph_rep_norm = test_sumfact_graph_rep / test_sumfact_graph_rep.norm(dim=1)[:, None]
+            test_referissue_graph_rep_norm = test_referissue_graph_rep / test_referissue_graph_rep.norm(dim=1)[:, None]
 
-        print("Macro Precision: ", macro_pre)
-        print("Macro Recall: ", macro_recall)
-        print("Macro F1: ", macro_F)
+            test_sumfact_score = torch.mm(test_sumfact_graph_rep_norm, test_sumfact_graph_rep_norm.T)
+            test_referissue_score = torch.mm(test_referissue_graph_rep_norm, test_referissue_graph_rep_norm.T)
 
-        print("NDCG@5: ", ndcg_score)
-        print("MRR@5: ", mrr_score)
-        print("MAP: ", map_score)
+            test_sim_score = test_sumfact_score+test_referissue_score
+            test_sim_score.fill_diagonal_(float('-inf'))
 
-        print("Correct Predictions yf: ", correct_pred_yf)
-        print("Retrived Cases yf: ", retri_cases_yf)
-        print("Relevant Cases yf: ", relevant_cases_yf)
+            sim_score = []
 
-        print("Micro Precision yf: ", Micro_pre_yf)
-        print("Micro Recall yf: ", Micro_recall_yf)
-        print("Micro F1 yf: ", Micro_F_yf)
+            test_query_list = []
+            for key, value in label_dict.items():
+                test_query_list.append(key)
+                query_index = test_label_list.index(key.split('.')[0])
+                score = test_sim_score[query_index, :]
+                sim_score.append(score)
+            sim_score = torch.stack(sim_score)                        
+            
+            final_pre_dict = rank(sim_score, 1335, test_query_list, test_label_list)
 
-        print("Macro Precision yf: ", macro_pre_yf)
-        print("Macro Recall yf: ", macro_recall_yf)
-        print("Macro F1 yf: ", macro_F_yf)
+            ##1stage
+            correct_pred, retri_cases, relevant_cases, Micro_pre, Micro_recall, Micro_F, macro_pre, macro_recall, macro_F = metric(5, final_pre_dict, label_dict)
+            yf_dict, correct_pred_yf, retri_cases_yf, relevant_cases_yf, Micro_pre_yf, Micro_recall_yf, Micro_F_yf, macro_pre_yf, macro_recall_yf, macro_F_yf = yf_metric(5, './label/test_2023_candidate_with_yearfilter.json', final_pre_dict, label_dict)
 
-        print("NDCG@5 yf: ", ndcg_score_yf)
-        print("MRR@5 yf: ", mrr_score_yf)
-        print("MAP yf: ", map_score_yf)
+            ndcg_score, mrr_score, map_score, p_score = t_metrics(label_dict, final_pre_dict, 5)
+            ndcg_score_yf, mrr_score_yf, map_score_yf, p_score_yf = t_metrics(label_dict, yf_dict, 5)
 
 
+            print("Correct Predictions: ", correct_pred)
+            print("Retrived Cases: ", retri_cases)
+            print("Relevant Cases: ", relevant_cases)
+
+            print("Micro Precision: ", Micro_pre)
+            print("Micro Recall: ", Micro_recall)
+            print("Micro F1: ", Micro_F)
+
+            print("Macro Precision: ", macro_pre)
+            print("Macro Recall: ", macro_recall)
+            print("Macro F1: ", macro_F)
+
+            print("NDCG@5: ", ndcg_score)
+            print("MRR@5: ", mrr_score)
+            print("MAP: ", map_score)
+
+            print("Correct Predictions yf: ", correct_pred_yf)
+            print("Retrived Cases yf: ", retri_cases_yf)
+            print("Relevant Cases yf: ", relevant_cases_yf)
+
+            print("Micro Precision yf: ", Micro_pre_yf)
+            print("Micro Recall yf: ", Micro_recall_yf)
+            print("Micro F1 yf: ", Micro_F_yf)
+
+            print("Macro Precision yf: ", macro_pre_yf)
+            print("Macro Recall yf: ", macro_recall_yf)
+            print("Macro F1 yf: ", macro_F_yf)
+
+            print("NDCG@5 yf: ", ndcg_score_yf)
+            print("MRR@5 yf: ", mrr_score_yf)
+            print("MAP yf: ", map_score_yf)
