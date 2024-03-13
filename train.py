@@ -146,23 +146,37 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
         ## Test
         model.eval()
         with torch.no_grad():
-            label_list = []
+            test_label_list = []
+            num = 0
             for batched_graph, labels in tqdm(dataloader):
-                sumfact_graph_batch = batched_graph
-                labels = [str(int(x)).zfill(6) for x in labels]
-                label_list.append(labels)
-            test_label_list = [y for x in label_list for y in x]
-
-            ## test refer(issue) graph
-            test_referissue_graph_list = []
-            for i in test_label_list:
-                test_referissue_graph = referissue_pool_dataset.graphs[i]
-                test_referissue_graph_list.append(test_referissue_graph)
-            referissue_graph_batch = dgl.batch(test_referissue_graph_list)
-
-
-            test_sumfact_graph_rep = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
-            test_referissue_graph_rep = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device)) 
+                num += 1
+                if num == 1:
+                    sumfact_graph_batch = batched_graph
+                    sumfact_graph_rep_matrix = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
+                    referissue_graph_list = []
+                    for i in labels:
+                        case_name = str(int(i)).zfill(6)
+                        test_label_list.append(case_name)
+                        referissue_graph = referissue_pool_dataset.graphs[case_name]
+                        referissue_graph_list.append(referissue_graph)
+                    referissue_graph_batch = dgl.batch(referissue_graph_list)
+                    referissue_graph_rep_matrix = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device))
+                else:
+                    sumfact_graph_batch = batched_graph
+                    sumfact_graph_rep = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
+                    sumfact_graph_rep_matrix = torch.cat((sumfact_graph_rep_matrix, sumfact_graph_rep), 0)          
+                    referissue_graph_list = []
+                    for i in labels:
+                        case_name = str(int(i)).zfill(6)
+                        test_label_list.append(case_name)
+                        referissue_graph = referissue_pool_dataset.graphs[case_name]
+                        referissue_graph_list.append(referissue_graph)
+                    referissue_graph_batch = dgl.batch(referissue_graph_list)
+                    referissue_graph_rep = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device))  
+                    referissue_graph_rep_matrix = torch.cat((referissue_graph_rep_matrix, referissue_graph_rep), 0)  
+            
+            test_sumfact_graph_rep = sumfact_graph_rep_matrix
+            test_referissue_graph_rep = referissue_graph_rep_matrix
 
             test_sumfact_graph_rep_norm = test_sumfact_graph_rep / test_sumfact_graph_rep.norm(dim=1)[:, None]
             test_referissue_graph_rep_norm = test_referissue_graph_rep / test_referissue_graph_rep.norm(dim=1)[:, None]
@@ -183,7 +197,7 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
                 sim_score.append(score)
             sim_score = torch.stack(sim_score)                        
             
-            final_pre_dict = rank(sim_score, 1335, test_query_list, test_label_list)
+            final_pre_dict = rank(sim_score, len(test_label_list), test_query_list, test_label_list)
 
             ##1stage
             correct_pred, retri_cases, relevant_cases, Micro_pre, Micro_recall, Micro_F, macro_pre, macro_recall, macro_F = metric(5, final_pre_dict, label_dict)
