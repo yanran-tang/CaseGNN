@@ -112,7 +112,7 @@ def main():
 
     # ## load test label
     test_labels = {}
-    with open(args.path+'/label/task1_test_labels_'+args.data+'.json', 'r')as f:
+    with open('./label/task1_test_labels_'+args.data+'.json', 'r')as f:
         test_labels = json.load(f)
         f.close()    
 
