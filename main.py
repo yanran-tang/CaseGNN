@@ -89,7 +89,7 @@ def main():
     ##Inference batch size
     if args.data == '2022':
         inference_bs = 1563
-    elif args. data == '2023':
+    elif args.data == '2023':
         inference_bs = 1335
     test_dataloader = GraphDataLoader(
         test_sumfact_dataset, sampler=test_sumfact_sampler, batch_size=inference_bs, drop_last=False, collate_fn=collate, shuffle=False)
