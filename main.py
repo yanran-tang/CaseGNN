@@ -122,9 +122,9 @@ def main():
 
     for epoch in tqdm(range(args.epoch)):
         print('Epoch:', epoch)
-        forward(model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, epoch, args.temp, bm25_hard_neg_dict, bm25_hard_neg_dict, args.hard_neg_num, train_flag=True, optimizer=optimizer)
+        forward(model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=True, optimizer=optimizer)
         with torch.no_grad():            
-            forward(model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, epoch, args.temp, bm25_hard_neg_dict, bm25_hard_neg_dict, args.hard_neg_num, train_flag=False, optimizer=optimizer)
+            forward(model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=False, optimizer=optimizer)
 
 if __name__ == '__main__':
     main()
