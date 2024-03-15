@@ -128,11 +128,11 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
             l_bm25_neg = l_bm25_neg_fact+l_bm25_neg_issue         
 
             if hard_neg == True:
-                logits = torch.cat([l_neg, l_pos, l_ran_neg, l_bm25_neg], dim=1).to(device)
+                logits = torch.cat([l_pos, l_neg, l_ran_neg, l_bm25_neg], dim=1).to(device)
             else:
-                logits = torch.cat([l_neg, l_pos, l_ran_neg], dim=1).to(device)
+                logits = torch.cat([l_pos, l_neg, l_ran_neg], dim=1).to(device)
 
-            logits_label = torch.arange(batched_graph.batch_size, 2*batched_graph.batch_size).type(torch.LongTensor).to(device)
+            logits_label = torch.arange(0, len(labels)).type(torch.LongTensor).to(device)
 
             loss = loss_model(logits/temp, logits_label)
 
