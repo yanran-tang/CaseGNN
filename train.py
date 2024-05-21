@@ -4,9 +4,9 @@ from tqdm import tqdm
 import random
 import dgl
 from torch_metrics import t_metrics, metric, yf_metric, rank
-from model import CaseGNN, early_stopping
 
-def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_pool_dataset, label_dict, epoch, temp, bm25_hard_neg_dict, hard_neg, hard_neg_num, train_flag, optimizer=None):
+
+def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_pool_dataset, label_dict, yf_path, epoch, temp, bm25_hard_neg_dict, hard_neg, hard_neg_num, train_flag, optimizer=None):
     if train_flag:
         ## Training
         loss_model = nn.CrossEntropyLoss()
@@ -140,8 +140,7 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
             optimizer.step()
             writer.add_scalar('Loss/Train', loss.item(), epoch)
             print('Loss/Train:', loss.item())
-            
-    
+                
     else:
         ## Test
         model.eval()
@@ -201,7 +200,7 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
 
             ##1stage
             correct_pred, retri_cases, relevant_cases, Micro_pre, Micro_recall, Micro_F, macro_pre, macro_recall, macro_F = metric(5, final_pre_dict, label_dict)
-            yf_dict, correct_pred_yf, retri_cases_yf, relevant_cases_yf, Micro_pre_yf, Micro_recall_yf, Micro_F_yf, macro_pre_yf, macro_recall_yf, macro_F_yf = yf_metric(5, './label/test_2023_candidate_with_yearfilter.json', final_pre_dict, label_dict)
+            yf_dict, correct_pred_yf, retri_cases_yf, relevant_cases_yf, Micro_pre_yf, Micro_recall_yf, Micro_F_yf, macro_pre_yf, macro_recall_yf, macro_F_yf = yf_metric(5, yf_path, final_pre_dict, label_dict)
 
             ndcg_score, mrr_score, map_score, p_score = t_metrics(label_dict, final_pre_dict, 5)
             ndcg_score_yf, mrr_score_yf, map_score_yf, p_score_yf = t_metrics(label_dict, yf_dict, 5)
