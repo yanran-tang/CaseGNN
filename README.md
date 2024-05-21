@@ -72,17 +72,17 @@ The final project file are as follows:
     ├── CaseGNN++_2022.sh
     ├── CaseGNN++_2023.sh
     ├── LegalFeatureExtraction.sh
-    ├── PromptcaseEmbeddingGeneration.sh
     ├── RelationExtraction.sh
+    ├── PromptcaseEmbeddingGeneration.sh
     ├── TACG.sh
     ├── main.py
-    ├── main_casegnn2plus.py
     ├── model.py
-    ├── model_casegnn2plus.py
-    ├── torch_metrics.py
     ├── train.py
+    ├── main_casegnn2plus.py
+    ├── model_casegnn2plus.py
     ├── train_casegnn2plus.py
     ├── EUGATConv.py
+    ├── torch_metrics.py
     ├── requirements.txt
     └── README.md          
     ```
@@ -169,7 +169,6 @@ If you find this repo useful, please cite
   booktitle    = {ECIR},
   year         = {2024}
 }
-
 
 @inproceedings{PromptCase,
   author       = {Yanran Tang and
