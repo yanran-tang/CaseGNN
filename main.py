@@ -38,7 +38,7 @@ parser.add_argument("--hard_neg_num", type=int, default=1, help="Bm25_neg case n
 
 
 ## other parameters
-parser.add_argument("--data", type=str, default='2022', help="coliee2022 or coliee2023")
+parser.add_argument("--data", type=str, default='2023', help="coliee2022 or coliee2023")
 
 args = parser.parse_args()
 
@@ -116,11 +116,23 @@ def main():
         os.makedirs(log_dir)
     logging.warning('logging to {}'.format(log_dir))
 
+    highest_ndcg = 0
+    con_epoch_num = 0
     for epoch in tqdm(range(args.epoch)):
         print('Epoch:', epoch)
-        forward(model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=True, optimizer=optimizer)
-        with torch.no_grad():            
-            forward(model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=False, optimizer=optimizer)
+        forward(args.data, model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=True, embedding_saving=False, optimizer=optimizer)
+        with torch.no_grad():                      
+            ndcg_score_yf = forward(args.data, model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=False, embedding_saving=False, optimizer=optimizer)
+
+        stop_para = early_stopping(highest_ndcg, ndcg_score_yf, epoch, con_epoch_num)
+        highest_ndcg = stop_para[0]
+        if stop_para[1]:
+            break
+        else:
+            con_epoch_num = stop_para[2]
+    ##CaseGNN Embedding Saving
+    forward(args.data, model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=True, embedding_saving=True, optimizer=optimizer)
+    forward(args.data, model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg, args.hard_neg_num, train_flag=False, embedding_saving=True, optimizer=optimizer)
 
 if __name__ == '__main__':
     main()

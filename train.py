@@ -3,10 +3,12 @@ import torch.nn as nn
 from tqdm import tqdm
 import random
 import dgl
+import os
+import json
 from torch_metrics import t_metrics, metric, yf_metric, rank
 
 
-def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_pool_dataset, label_dict, yf_path, epoch, temp, bm25_hard_neg_dict, hard_neg, hard_neg_num, train_flag, optimizer=None):
+def forward(data, model, device, writer, dataloader, sumfact_pool_dataset, referissue_pool_dataset, label_dict, yf_path, epoch, temp, bm25_hard_neg_dict, hard_neg, hard_neg_num, train_flag, embedding_saving, optimizer=None):
     if train_flag:
         ## Training
         loss_model = nn.CrossEntropyLoss()
@@ -237,3 +239,48 @@ def forward(model, device, writer, dataloader, sumfact_pool_dataset, referissue_
             print("NDCG@5 yf: ", ndcg_score_yf)
             print("MRR@5 yf: ", mrr_score_yf)
             print("MAP yf: ", map_score_yf)
+
+    if embedding_saving:
+        model.eval()
+        with torch.no_grad():
+            label_list = []
+            num =0
+            sumfact_graph_list = []
+            for batched_graph, labels in tqdm(dataloader):
+                num += 1
+                sumfact_graph_batch = batched_graph
+                sumfact_graph_list.append(sumfact_graph_batch)
+                sumfact_graph = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
+                labels = [str(int(x)).zfill(6) for x in labels]
+                label_list.append(labels)
+                if num == 1:
+                    sumfact_graph_rep = sumfact_graph
+                else:
+                    sumfact_graph_rep = torch.cat((sumfact_graph_rep, sumfact_graph), dim=0)
+            
+                referissue_graph_list = []
+                for i in labels:
+                    referissue_graph = referissue_pool_dataset.graphs[i]
+                    referissue_graph_list.append(referissue_graph)
+                referissue_graph_batch = dgl.batch(referissue_graph_list)
+                referissue_graph = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device))   
+                if num == 1:
+                    referissue_graph_rep = referissue_graph
+                else:
+                    referissue_graph_rep = torch.cat((referissue_graph_rep, referissue_graph), dim=0)
+            label_list = [y for x in label_list for y in x]
+        
+        if train_flag:
+            dataset = 'train'
+        else:
+            dataset = 'test'
+        
+        case_embedding_matrix = torch.cat((sumfact_graph_rep, referissue_graph_rep), 1) 
+        torch.save(case_embedding_matrix, os.getcwd()+'/Graph_generation/coliee'+data+'_'+dataset+'_casegnn_embedding.pt')
+
+        with open(os.getcwd()+'/Graph_generation/coliee'+data+'_'+dataset+'_casegnn_embedding_case_name_list.json' , "w") as fOut:
+            json.dump(label_list, fOut)
+            fOut.close() 
+
+    if train_flag == False:
+        return ndcg_score_yf

@@ -5,7 +5,6 @@ from tqdm import tqdm
 
 from dgl.dataloading import GraphDataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
-from dgl.data.utils import load_graphs, save_graphs
 
 from DATASET.data_load import SyntheticDataset, PoolDataset, collate
 from model_casegnn2plus import EUGATGNN, early_stopping
@@ -120,11 +119,23 @@ def main():
         os.makedirs(log_dir)
     logging.warning('logging to {}'.format(log_dir))
 
+    highest_ndcg = 0
+    con_epoch_num = 0
     for epoch in tqdm(range(args.epoch)):
         print('Epoch:', epoch)
-        forward(model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=True, optimizer=optimizer)
+        forward(args.data, model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=True, embedding_saving=False, optimizer=optimizer)
         with torch.no_grad():            
-            forward(model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=False, optimizer=optimizer)
+            ndcg_score_yf = forward(args.data, model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=False, embedding_saving=False, optimizer=optimizer)
+
+        stop_para = early_stopping(highest_ndcg, ndcg_score_yf, epoch, con_epoch_num)
+        highest_ndcg = stop_para[0]
+        if stop_para[1]:
+            break
+        else:
+            con_epoch_num = stop_para[2]
+        ##CaseGNN++ Embedding Saving
+    forward(args.data, model, device, writer, train_dataloader, train_sumfact_pool_dataset, train_referissue_pool_dataset, train_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=True, embedding_saving=True, optimizer=optimizer)
+    forward(args.data, model, device, writer, test_dataloader, test_sumfact_pool_dataset, test_referissue_pool_dataset, test_labels, yf_path, epoch, args.temp, bm25_hard_neg_dict, args.hard_neg_num, args.pos_aug, args.ran_aug, args.aug_edgedrop, args.aug_featmask_node, args.aug_featmask_edge, train_flag=False, embedding_saving=True, optimizer=optimizer)
 
 if __name__ == '__main__':
     main()

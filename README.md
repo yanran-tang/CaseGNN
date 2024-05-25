@@ -21,7 +21,7 @@ Specifically, the downloaded COLIEE2022 folders `task1_train_files_2022` and `ta
 
 The label file `task1_train_labels_2022.json` and `task1_test_labels_2022.json` shoule be put into folder `/label/`. 
 
-COLIEE2022 folders should be set in a similar way. 
+COLIEE2023 folders should be set in a similar way. 
 
 The final project file are as follows:
 
