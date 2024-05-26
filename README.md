@@ -67,10 +67,10 @@ The final project file are as follows:
     │   │   └── task1_train_files_2022
     │   └── task1_train_2023
     │       └── task1_train_files_2023
-    ├── CaseGNN_2022.sh
-    ├── CaseGNN_2023.sh
-    ├── CaseGNN++_2022.sh
-    ├── CaseGNN++_2023.sh
+    ├── CaseGNN2022_run.sh
+    ├── CaseGNN2023_run.sh
+    ├── CaseGNN++2022_run.sh
+    ├── CaseGNN++2023_run.sh
     ├── LegalFeatureExtraction.sh
     ├── RelationExtraction.sh
     ├── PromptcaseEmbeddingGeneration.sh
@@ -133,10 +133,10 @@ The final project file are as follows:
 
 # Model Training
 ## 1. CaseGNN Model Training
-Run `. ./CaseGNN_2022.sh` and `. ./CaseGNN_2023.sh` for COLIEE2022 and COLIEE2023, respectively.
+Run `. ./CaseGNN2022_run.sh` and `. ./CaseGNN2023_run.sh` for COLIEE2022 and COLIEE2023, respectively.
 
 ## 2. CaseGNN++ Model Training
-Run `. ./CaseGNN++_2022.sh` and `. ./CaseGNN++_2023.sh` for COLIEE2022 and COLIEE2023, respectively.
+Run `. ./CaseGNN++2022_run.sh` and `. ./CaseGNN++2023_run.sh` for COLIEE2022 and COLIEE2023, respectively.
 
 Specifically, augmentation methods can be chosen to use for: 
 - Positive samples only (--pos_aug)
