@@ -89,7 +89,7 @@ def main():
         test_sumfact_dataset, sampler=test_sumfact_sampler, batch_size=inference_bs, drop_last=False, collate_fn=collate, shuffle=False)
 
     test_sumfact_pool_dataset = PoolDataset("./Graph_generation/graph/graph_bin_"+args.data+"/bidirec_"+args.data+"test_fact.bin")
-    test_referissue_pool_dataset = PoolDataset("./Graph_generation/graph/graph_bin_"+args.data+"/bidirec_"+args.data+"test_fact.bin")
+    test_referissue_pool_dataset = PoolDataset("./Graph_generation/graph/graph_bin_"+args.data+"/bidirec_"+args.data+"test_issue.bin")
 
     ## load train label
     train_labels = {}
