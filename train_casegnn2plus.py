@@ -389,32 +389,42 @@ def forward(data, model, device, writer, dataloader, sumfact_pool_dataset, refer
     if embedding_saving:
         model.eval()
         with torch.no_grad():
-            label_list = []
-            num =0
-            sumfact_graph_list = []
-            for batched_graph, labels in tqdm(dataloader):
-                num += 1
-                sumfact_graph_batch = batched_graph
-                sumfact_graph_list.append(sumfact_graph_batch)
-                sumfact_graph = model(sumfact_graph_batch.to(device), sumfact_graph_batch.ndata['w'].to(device), sumfact_graph_batch.edata['w'].to(device))
-                labels = [str(int(x)).zfill(6) for x in labels]
-                label_list.append(labels)
-                if num == 1:
-                    sumfact_graph_rep = sumfact_graph
-                else:
-                    sumfact_graph_rep = torch.cat((sumfact_graph_rep, sumfact_graph), dim=0)
-            
-                referissue_graph_list = []
-                for i in labels:
-                    referissue_graph = referissue_pool_dataset.graphs[i]
-                    referissue_graph_list.append(referissue_graph)
-                referissue_graph_batch = dgl.batch(referissue_graph_list)
-                referissue_graph = model(referissue_graph_batch.to(device), referissue_graph_batch.ndata['w'].to(device), referissue_graph_batch.edata['w'].to(device))   
-                if num == 1:
-                    referissue_graph_rep = referissue_graph
-                else:
-                    referissue_graph_rep = torch.cat((referissue_graph_rep, referissue_graph), dim=0)
-            label_list = [y for x in label_list for y in x]
+            labels_list = []
+            num = 0
+            if referissue_pool_dataset.label_list == sumfact_pool_dataset.label_list:
+                for i in range(len(sumfact_pool_dataset.graph_list)):
+                    num += 1
+                    sumfact_graph = model(sumfact_pool_dataset.graph_list[i].to(device), sumfact_pool_dataset.graph_list[i].ndata['w'].to(device), sumfact_pool_dataset.graph_list[i].edata['w'].to(device))
+                    referissue_graph = model(referissue_pool_dataset.graph_list[i].to(device), referissue_pool_dataset.graph_list[i].ndata['w'].to(device), referissue_pool_dataset.graph_list[i].edata['w'].to(device))   
+                    labels = str(int(sumfact_pool_dataset.label_list[i])).zfill(6)
+                    labels_list.append(labels)
+                    if num == 1:
+                        sumfact_graph_rep = sumfact_graph
+                        referissue_graph_rep = referissue_graph
+                    else:
+                        sumfact_graph_rep = torch.cat((sumfact_graph_rep, sumfact_graph), dim=0)
+                        referissue_graph_rep = torch.cat((referissue_graph_rep, referissue_graph), dim=0)
+                        
+            else:
+                for i in range(len(sumfact_pool_dataset.graph_list)):
+                    num += 1
+                    sumfact_graph = model(sumfact_pool_dataset.graph_list[i].to(device), sumfact_pool_dataset.graph_list[i].ndata['w'].to(device), sumfact_pool_dataset.graph_list[i].edata['w'].to(device))
+                    labels = str(int(sumfact_pool_dataset.label_list[i])).zfill(6)
+                    labels_list.append(labels)
+                    if num == 1:
+                        sumfact_graph_rep = sumfact_graph
+                    else:
+                        sumfact_graph_rep = torch.cat((sumfact_graph_rep, sumfact_graph), dim=0)
+                    
+                num = 0
+                for j in labels_list:
+                    num += 1
+                    graph_index = referissue_pool_dataset.label_list.index(int(j))
+                    referissue_graph = model(referissue_pool_dataset.graph_list[graph_index].to(device), referissue_pool_dataset.graph_list[graph_index].ndata['w'].to(device), referissue_pool_dataset.graph_list[graph_index].edata['w'].to(device))   
+                    if num == 1:
+                        referissue_graph_rep = referissue_graph
+                    else:
+                        referissue_graph_rep = torch.cat((referissue_graph_rep, referissue_graph), dim=0)
         
         if train_flag:
             dataset = 'train'
@@ -425,7 +435,7 @@ def forward(data, model, device, writer, dataloader, sumfact_pool_dataset, refer
         torch.save(case_embedding_matrix, os.getcwd()+'/Graph_generation/coliee'+data+'_'+dataset+'_casegnn++_embedding.pt')
 
         with open(os.getcwd()+'/Graph_generation/coliee'+data+'_'+dataset+'_casegnn++_embedding_case_name_list.json' , "w") as fOut:
-            json.dump(label_list, fOut)
+            json.dump(labels_list, fOut)
             fOut.close() 
     
     if train_flag == False:

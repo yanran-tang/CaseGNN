@@ -46,7 +46,10 @@ class CaseGNN(nn.Module):
             graph_node_embedding_list = []
             for i in range(len(batch_graph_embedding_index_list)):
                 index_list.append(num)
-                graph_node_embedding_list.append(h[num,:])
+                try:
+                    graph_node_embedding_list.append(h[num,:])
+                except:
+                    graph_node_embedding_list.append(h)
                 num += batch_graph_embedding_index_list[i]
 
             h = th.stack(graph_node_embedding_list)
