@@ -1,13 +1,13 @@
-# CaseGNN & CaseGNN++
-Code for CaseGNN (ECIR 2024 paper):
+# CaseGNN & LEXA
+Code for **CaseGNN** (ECIR 2024 paper):
 
 Title: [CaseGNN: Graph Neural Networks for Legal Case Retrieval with Text-Attributed Graphs](https://arxiv.org/abs/2312.11229)
 
 Author: Yanran Tang, Ruihong Qiu, Yilun Liu, Xue Li and Zi Huang
 
-And CaseGNN++ (Extension of CaseGNN):
+And **LEXA** (Extension of CaseGNN):
 
-Title: [CaseGNN++: Graph Contrastive Learning for Legal Case Retrieval with Graph Augmentation](https://arxiv.org/abs/2405.11791)
+Title: [LEXA: Legal Case Retrieval via Graph Contrastive Learning with Contextualised LLM Embeddings ](https://arxiv.org/abs/2405.11791)
 
 Author: Yanran Tang, Ruihong Qiu, Yilun Liu, Xue Li and Zi Huang
 
@@ -135,7 +135,7 @@ The final project file are as follows:
 ## 1. CaseGNN Model Training
 Run `. ./CaseGNN2022_run.sh` and `. ./CaseGNN2023_run.sh` for COLIEE2022 and COLIEE2023, respectively.
 
-## 2. CaseGNN++ Model Training
+## 2. CaseGNN++ Model Training (LEXA without LLMs)
 Run `. ./CaseGNN++2022_run.sh` and `. ./CaseGNN++2023_run.sh` for COLIEE2022 and COLIEE2023, respectively.
 
 Specifically, augmentation methods can be chosen to use for: 
@@ -143,16 +143,31 @@ Specifically, augmentation methods can be chosen to use for:
 - Random negative samples only (--ran_aug)
 - Both positive and random negative samples (--pos_aug --ran_aug)
 
+## 3. LEXA Model [(🤗Huggin Face)](https://huggingface.co/AnnaStudy/LEXA-8B)
+
+  ```python
+  from transformers import AutoModel, AutoTokenizer
+
+  model = AutoModel.from_pretrained("AnnaStudy/LEXA-8B", torch_dtype="auto", device_map="auto")
+  tokenizer = AutoTokenizer.from_pretrained("AnnaStudy/LEXA-8B")
+
+  case_txt = "The following contains key components of a legal case. Legal facts..."
+
+  tokenized = tokenizer(case_txt, return_tensors='pt', padding=True, truncation=True, max_length=2048)
+  outputs = model(**tokenized)
+  case_embedding = outputs.last_hidden_state[:, -1]
+  ```
+
 # Cite
 If you find this repo useful, please cite
 ```
-@article{CaseGNN++,
+@article{LEXA,
   author       = {Yanran Tang and
                   Ruihong Qiu and
                   Yilun Liu and
                   Xue Li and
                   Zi Huang},
-  title        = {CaseGNN++: Graph Contrastive Learning for Legal Case Retrieval with Graph Augmentation},
+  title        = {LEXA: Legal Case Retrieval via Graph Contrastive Learning with Contextualised LLM Embeddings},
   journal      = {CoRR},
   volume       = {abs/2405.11791},
   year         = {2024},
