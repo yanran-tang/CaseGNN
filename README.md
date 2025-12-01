@@ -6,8 +6,8 @@ Title: [CaseGNN: Graph Neural Networks for Legal Case Retrieval with Text-Attrib
 Author: Yanran Tang, Ruihong Qiu, Yilun Liu, Xue Li and Zi Huang
 
 And **LEXA** (Extension of CaseGNN):
-
-Title: [LEXA: Legal Case Retrieval via Graph Contrastive Learning with Contextualised LLM Embeddings ](https://arxiv.org/abs/2405.11791)
+![Alt text](images/LEXA.jpg)
+Title: [LEXA: Legal Case Retrieval via Graph Contrastive Learning with Contextualised LLM Embeddings](https://arxiv.org/abs/2405.11791)
 
 Author: Yanran Tang, Ruihong Qiu, Yilun Liu, Xue Li and Zi Huang
 
@@ -162,15 +162,11 @@ Specifically, augmentation methods can be chosen to use for:
 If you find this repo useful, please cite
 ```
 @article{LEXA,
-  author       = {Yanran Tang and
-                  Ruihong Qiu and
-                  Yilun Liu and
-                  Xue Li and
-                  Zi Huang},
+  author       = {Yanran Tang, Ruihong Qiu, Xue Li, Zi Huang},
   title        = {LEXA: Legal Case Retrieval via Graph Contrastive Learning with Contextualised LLM Embeddings},
   journal      = {CoRR},
   volume       = {abs/2405.11791},
-  year         = {2024},
+  year         = {2025}
 }
 
 @inproceedings{CaseGNN,
